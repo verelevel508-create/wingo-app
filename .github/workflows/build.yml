@@ -65,4 +65,3 @@ jobs:
         with:
           name: WingoPredictor-APK
           path: bin/*.apk
-          
