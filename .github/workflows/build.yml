@@ -39,9 +39,9 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
           version = 1.0
-          requirements = python3,kivy
+          # FIXED: Full Graphic requirements added to prevent exit code 1
+          requirements = python3,kivy,sdl2,sdl2_image,sdl2_ttf,sdl2_mixer
           orientation = portrait
-          osx.kivy_version = 2.1.0
           fullscreen = 1
           android.api = 33
           android.minapi = 21
@@ -65,3 +65,4 @@ jobs:
         with:
           name: WingoPredictor-APK
           path: bin/*.apk
+          
