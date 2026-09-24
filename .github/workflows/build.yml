@@ -3,7 +3,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -19,17 +19,17 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Android Build Dependencies
+      - name: Install Strict Android Build Dependencies
         run: |
-          sudo apt-get update --fix-missing
-          sudo apt-get install -y --no-install-recommends build-essential ccache git libffi-dev libssl-dev python3-dev python3-setuptools python3-virtualenv unzip zip zlib1g-dev autoconf libtool pkg-config patch
-          # FIXED: System variables to ignore SSL download errors in cloud
-          echo "PYTHONHTTPSVERIFY=0" >> $GITHUB_ENV
+          sudo apt-get update
+          sudo apt-get install -y build-essential ccache git libffi-dev libssl-dev python3-dev python3-setuptools python3-virtualenv unzip zip zlib1g-dev autoconf libtool pkg-config patch poweroprof openjdk-17-jdk
 
       - name: Install Python Tools via Pip
         run: |
           pip install --upgrade pip setuptools virtualenv
-          pip install cython==0.29.33 buildozer
+          # Strict version locking to prevent compilation crash
+          pip install cython==0.29.33
+          pip install buildozer kivy==2.2.1
 
       - name: Create Custom Buildozer Configuration
         run: |
@@ -41,8 +41,7 @@ jobs:
           source.dir = .
           source.include_exts = py,png,jpg,kv,atlas
           version = 1.0
-          # FIXED: Default python3 core to let buildozer auto-download correctly
-          requirements = python3,kivy
+          requirements = python3,kivy==2.2.1
           orientation = portrait
           fullscreen = 1
           android.api = 33
