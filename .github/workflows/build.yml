@@ -3,7 +3,7 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -19,7 +19,12 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Tools via Pip
+      - name: Install Missing Linux Tools Safely
+        run: |
+          sudo apt-get update --fix-missing
+          sudo apt-get install -y --no-install-recommends build-essential ccache git libffi-dev libssl-dev python3-dev python3-setuptools python3-virtualenv unzip zip zlib1g-dev autoconf libtool pkg-config patch
+
+      - name: Install Python Tools via Pip
         run: |
           pip install --upgrade pip setuptools virtualenv
           pip install cython==0.29.33 buildozer kivy
@@ -27,9 +32,13 @@ jobs:
       - name: Configure Buildozer SPEC
         run: |
           buildozer init
+          # Proper App Setup
           sed -i 's/title = My Application/title = Wingo Predictor/g' buildozer.spec
           sed -i 's/package.name = myapp/package.name = wingopredictor/g' buildozer.spec
           sed -i 's/package.domain = org.test/package.domain = org.wingo/g' buildozer.spec
+          # Strict requirements setup for python3 and kivy
+          sed -i 's/requirements = python3,kivy/requirements = python3,kivy/g' buildozer.spec
+          # Auto-accept Android SDK licenses
           sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
 
       - name: Build Android APK
