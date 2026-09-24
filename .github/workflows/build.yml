@@ -3,36 +3,36 @@ on: [push, workflow_dispatch]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Cache Buildozer Global Directory
-        uses: actions/cache@v4
-        with:
-          path: ~/.buildozer
-          key: ${{ runner.os }}-buildozer-${{ hashFiles('**/buildozer.spec') }}
+      - name: Install Tools via Pip
+        run: |
+          pip install --upgrade pip setuptools virtualenv
+          pip install cython==0.29.33 buildozer kivy
 
-      - name: Build APK using Subosito Action
-        uses: subosito/setup-buildozer@v1
-
-      - name: Initialize and Fix Requirements
+      - name: Configure Buildozer SPEC
         run: |
           buildozer init
-          # Automatically accept android sdk licenses
-          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
-          # Update proper app details
           sed -i 's/title = My Application/title = Wingo Predictor/g' buildozer.spec
           sed -i 's/package.name = myapp/package.name = wingopredictor/g' buildozer.spec
           sed -i 's/package.domain = org.test/package.domain = org.wingo/g' buildozer.spec
+          sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/g' buildozer.spec
 
-      - name: Compile Android APK
+      - name: Build Android APK
         run: |
           buildozer -v android debug
 
