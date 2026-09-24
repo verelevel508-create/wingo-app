@@ -1,1 +1,70 @@
- 
+name: Build Kivy APK
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Strict Android Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential ccache git libffi-dev libssl-dev python3-dev python3-setuptools python3-virtualenv unzip zip zlib1g-dev autoconf libtool pkg-config patch poweroprof openjdk-17-jdk
+
+      - name: Install Python Tools via Pip
+        run: |
+          pip install --upgrade pip setuptools virtualenv
+          # Strict version locking to prevent compilation crash
+          pip install cython==0.29.33
+          pip install buildozer kivy==2.2.1
+
+      - name: Create Custom Buildozer Configuration
+        run: |
+          cat << 'EOF' > buildozer.spec
+          [app]
+          title = Wingo Predictor
+          package.name = wingopredictor
+          package.domain = org.wingo
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas
+          version = 1.0
+          requirements = python3,kivy==2.2.1
+          orientation = portrait
+          fullscreen = 1
+          android.api = 33
+          android.minapi = 21
+          android.ndk_api = 21
+          android.private_storage = True
+          android.accept_sdk_license = True
+          android.archs = armeabi-v7a, arm64-v8a
+          p4a.branch = master
+
+          [buildozer]
+          log_level = 2
+          warn_on_root = 1
+          EOF
+
+      - name: Build Android APK
+        env:
+          PYTHONHTTPSVERIFY: 0
+        run: |
+          buildozer -v android debug
+
+      - name: Upload Finished APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: WingoPredictor-APK
+          path: bin/*.apk
